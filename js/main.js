@@ -128,10 +128,11 @@ const io = new IntersectionObserver(entries => {
 	entries.forEach(async entry => {
 		// 관찰 대상이 viewport 안에 들어온 경우 
 		if (entry.intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
-			loaderEl.classList.add('active');
+			loadingStart();
 			await new Promise(resolve => setTimeout(resolve, 1500));
 			currentPage++;
 			fetchData(title, type, year, currentPage).then(res => parseData(res.data));
+			loadingEnd();
 		}
 	})
 })
