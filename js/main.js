@@ -1,59 +1,37 @@
-import axios from 'axios';
-/* 숫자 애니메이션 */
-const countEl = document.querySelector(".count");
-let speed = 100;
-const animate = () => { 
-	const data = +countEl.getAttribute('data'); 
-	const value = +countEl.innerText; 
-	const time = data / speed; 
-	if (value < data) { 
-		countEl.innerText = Math.ceil(value + time);  
-		requestAnimationFrame(animate); 
-	}
-	if (value === data) countEl.innerText = data.toLocaleString();
-};
-animate();
-/* option 출시년도 렌더링 관련 */
-const optionConEl = document.querySelectorAll('.option-container')[1]; // 출시년도 option-container
-function makeYears() {
-	const arr = [];
-	const thisYear = new Date().getFullYear();
-	for (let i = thisYear; i >= 1985; i -= 1) {
-		arr.push(i)
-	}
-	return arr;
-}
-const yearToOption = year => `<div class="option-container__option">
-<input type="radio" class="option__radio" id="${year}" name="year">
-<label class="option__label" for="${year}" data-value="${year}">${year}</label>
-</div>`;
-const years = makeYears();
-const newOptions = years.reduce((years,year)=>years+yearToOption(year), "");
-optionConEl.innerHTML = newOptions;
+import numberAnimation from './numberAnimation';
+import renderOption from './renderOption';
+import drawCircle from './drawCircle';
+import {
+	fetchData,
+	fetchDataById
+} from './api';
 
-/* form 관련 */
-const formEl = document.querySelector(".form");
+numberAnimation();
+renderOption();
+
+/* selectbox 관련 */
 const searchSecEl = document.querySelector("#search");
-
+const formEl = searchSecEl.querySelector(".form");
 let selectedBox;
+
 formEl.addEventListener("click", (event) => {
 	event.stopPropagation();
 	openOptions(event);
 	handleLabels(event);
 });
-searchSecEl.addEventListener("click", () => {
-	selectedBox?.classList.remove("selectbox--active");
+document.body.addEventListener("click", () => {
+	if (!selectedBox) return;
+	// 열린 option 창이 2개 이상이면 한꺼번에 닫아 주기 
+	if (formEl.querySelectorAll('.selectbox--active').length > 1) {
+		formEl.querySelectorAll('.selectbox').forEach(elem =>
+			elem.classList.remove("selectbox--active")
+		);
+	}
+	selectedBox.classList.remove("selectbox--active");
 });
 
 function openOptions(e) {
 	if (e.target.className !== "selectbox__displayWord") return;
-	if (selectedBox) {
-		if (selectedBox.classList.contains('selectbox--active') && selectedBox === e.target.parentNode) {
-			selectedBox?.classList.remove('selectbox--active');
-			return;
-		}
-		selectedBox.classList.remove('selectbox--active');
-	}
 	selectedBox = e.target.parentNode;
 	selectedBox.classList.add('selectbox--active');
 }
@@ -69,63 +47,56 @@ function handleLabels(e) {
 	selectBox.classList.remove("selectbox--active", "selectbox--unselect");
 }
 
-/* api fetch 관련 */
+/* fetch 관련 */
 const selectBoxEls = document.querySelectorAll(".selectbox");
-const gridConEl = document.querySelector('.grid-container');
-const searchInputEl = document.querySelector('.search-input');
+const searchInputEl = formEl.querySelector('.search-input');
+const resultsSecEl = document.querySelector('#results');
+let gridConEl = resultsSecEl.querySelector('.grid-container');
+const messageEl = resultsSecEl.querySelector('.message');
+const loaderEl = resultsSecEl.querySelector('.loader');
 const NO_POSTER_IMAGE = "./images/noPoster.png";
-const messageEl = document.querySelector('.message');
-const loaderEl = document.querySelector('.loader');
 let title, type, year, pageLength;
 let currentPage = 1;
 formEl.addEventListener('submit', (e) => {
 	e.preventDefault();
+	loadingStart();
+	initApiParams();
+	renderMovies();
+	loadingEnd();
+});
+const loadingStart = () => loaderEl.classList.add('active');
+const loadingEnd = () => loaderEl.classList.remove('active');
+function initApiParams() {
 	title = searchInputEl.value;
 	type = selectBoxEls[0].getAttribute("data-option") || "";
-	currentPage = 1; 
+	currentPage = 1;
 	year = selectBoxEls[1].getAttribute("data-option") || "";
-
-	gridConEl.innerHTML = ""; // 그리드 영역 초기화
-	loaderEl.classList.add('active'); // 로딩 시작
-	fetchData(title, type, year, currentPage).then(res => parsing(res.data));
-	searchInputEl.value = ""; // 검색창 초기화 
-});
-async function fetchData(title, type, year, currentPage) {
-	const URL = `https://www.omdbapi.com/?apikey=${process.env.OMDB_API_KEY}&s=${title}&type=${type}&y=${year}&page=${currentPage}`;
-	return await axios.get(URL);
 }
-function parsing(data) {
+
+function renderMovies() {
+	searchInputEl.value = ""; // 검색창 초기화 
+	gridConEl.innerHTML = ""; // 그리드 영역 초기화
+	fetchData(title, type, year, currentPage).then(res => parseData(res.data));
+}
+
+function parseData(resData) {
 	/* 에러처리 */
-	if (data.Error) {
-		messageEl.textContent = data.Error; 
-		loaderEl.classList.remove('active'); // 로딩 종료
+	if (resData.Error) {
+		handleError(resData.Error);
 		return;
 	}
-	/* 렌더링 관련 */
-	const newItems = data.Search.reduce((movies,movie) => movies+movieToGridItem(movie), "");
-	gridConEl.innerHTML += newItems;
-	loaderEl.classList.remove('active'); // 로딩 종료
-	pageLength = Math.ceil(+data.totalResults / 10);
-	messageEl.innerHTML = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
-	viewModal();
+	/* 페이지 길이 업데이트 */
+	pageLength = Math.ceil(+resData.totalResults / 10);
+	/* 렌더링 */
+	renderSearchResults(resData);
+	updateGridHandler();
 }
 
-/* IntersectionObserver API */
-const io = new IntersectionObserver(entries => {
-  entries.forEach(async entry => {
-    // 관찰 대상이 viewport 안에 들어온 경우 
-    if (entry.intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
-      loaderEl.classList.add('active');
-			await new Promise(resolve => setTimeout(resolve, 1500));
-			currentPage++;
-			fetchData(title, type, year, currentPage).then(res => parsing(res.data));
-    }
-  })
-})
-
-const targetEl = document.querySelector('.target-area');
-io.observe(targetEl);
-
+function renderSearchResults(data) {
+	messageEl.innerHTML = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
+	const newItems = data.Search.reduce((movies, movie) => movies + movieToGridItem(movie), "");
+	gridConEl.innerHTML += newItems;
+}
 const movieToGridItem = movie =>
 	`<div class="grid-item">
 		<div class="contents-poster">
@@ -139,78 +110,89 @@ const movieToGridItem = movie =>
 				</div>
 			</div>
 		</div>
-	</div>`
-;
+	</div>`;
 
+function handleError(error) {
+	const NOT_FOUND = "Movie not found!";
+	const MANY_RESULT = "Too many results.";
+	let errorMessage = "";
+	if (error === NOT_FOUND) {
+		errorMessage = `"${title}" 검색 결과가 없습니다.`;
+	} else if (error === MANY_RESULT) {
+		errorMessage = "검색 결과가 너무 많습니다.";
+	}
+	messageEl.textContent = errorMessage;
+}
+/* IntersectionObserver 관련 */
+const io = new IntersectionObserver(entries => {
+	entries.forEach(async entry => {
+		// 관찰 대상이 viewport 안에 들어온 경우 
+		if (entry.intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
+			loaderEl.classList.add('active');
+			await new Promise(resolve => setTimeout(resolve, 1500));
+			currentPage++;
+			fetchData(title, type, year, currentPage).then(res => parseData(res.data));
+		}
+	})
+})
+const targetEl = resultsSecEl.querySelector('.target-area');
+io.observe(targetEl);
 
-
-/* 영화 detail page 모달창 관련 */
-function viewModal() {
-	const gridEl = document.querySelector('.grid-container');
-	const hiddenModalEl = document.querySelector('.hidden-modal');
-	const modalCloseEl = document.querySelector('.modal-close');
-	const modalCurtainEl = document.querySelector('.modal-curtain');
-	gridEl.addEventListener('click', (e) => {
-		if(e.target.parentNode.className!=="contents-more") return;
-		const movieId = e.target.closest(".contents-more").getAttribute('data-value');
-		renderModal(movieId);
-		/* 모달창을 제외한 배경 요소 스크롤 방지 */
-		document.body.style.overflow = "hidden";
-		hiddenModalEl.classList.add('active');
-	});
-	modalCloseEl.addEventListener('click', (e) => {
-		/* 스크롤 방지 해제 */
-		document.body.style.overflow = "scroll";
-		hiddenModalEl.classList.remove('active');
-	});
-	modalCurtainEl.addEventListener('click', (e) => {
-		/* 스크롤 방지 해제 */
-		document.body.style.overflow = "scroll";
-		hiddenModalEl.classList.remove('active');
-	});
+/* 모달창 관련 */
+function updateGridHandler() {
+	// 기존에 할당된 click 이벤트 핸들러 제거
+	gridConEl.removeEventListener('click', handleGridClick);
+	// .grid-container 요소 새로 받기 
+	gridConEl = document.querySelector('.grid-container');
+	// 새로 받은 .grid-container 요소에 click 이벤트 핸들러 할당
+	gridConEl.addEventListener('click', handleGridClick);
 }
 
-async function fetchDataById(id) {
-	const URL = `https://www.omdbapi.com/?apikey=${process.env.OMDB_API_KEY}&i=${id}`;
-	return await axios.get(URL);
+function handleGridClick(e) {
+	if (e.target.parentNode.className !== "contents-more") return;
+	const movieId = e.target.closest(".contents-more").getAttribute('data-value');
+	renderModal(movieId);
+	/* 모달창을 제외한 배경 요소 스크롤 방지 */
+	document.body.style.overflow = "hidden";
+	hiddenModalEl.classList.add('active');
 }
+
+const hiddenModalEl = document.querySelector('.hidden-modal');
+const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
+const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
+modalCloseEl.addEventListener('click', handleModalClick);
+modalCurtainEl.addEventListener('click', handleModalClick);
+
+function handleModalClick(e) {
+	/* 모달창을 제외한 배경 요소 스크롤 방지 해제 */
+	document.body.style.overflow = "scroll";
+	hiddenModalEl.classList.remove('active');
+}
+
 function renderModal(id) {
-	const imageEl = document.querySelector('.modal-image');
-	const plotEl = document.querySelector('.modal-plot');
-	const titleEl = document.querySelector('.modal-title');
-	const directorsEl = document.querySelector('.modal-directors');
-	const actorsEl = document.querySelector('.modal-actors');
-	const genresEl = document.querySelector('.modal-genres');
-	fetchDataById(id).then(res => {
-		const { Plot, Title, Director, Actors, Genre, imdbRating} = res.data;
-		imageEl.src = res.data.Poster!=='N/A' ? res.data.Poster.replace('SX300', 'SX700') : NO_POSTER_IMAGE;
-		plotEl.textContent = Plot;
-		titleEl.textContent = Title;
-		directorsEl.textContent = Director;
-		actorsEl.textContent = Actors;
-		genresEl.textContent = Genre;
-		drawCircle(imdbRating);
-	});
+	fetchDataById(id).then(res => parseModalData(res.data));
 }
-viewModal();
 
-/* svg */
-const barEl = document.querySelector('.circle-bar');
-const vauleEl = document.querySelector('.circle-value');
-const RADIUS = 27;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-function drawCircle(score) {
-  let progress = +score / 10;
-  let dashoffset = CIRCUMFERENCE * (1 - progress);
-  vauleEl.innerHTML=score;
-  barEl.style.strokeDashoffset = dashoffset;
+function parseModalData(data) {
+	const {
+		Plot,
+		Title,
+		Director,
+		Actors,
+		Genre,
+		imdbRating
+	} = data;
+	const imageEl = hiddenModalEl.querySelector('.modal-image');
+	const plotEl = hiddenModalEl.querySelector('.modal-plot');
+	const titleEl = hiddenModalEl.querySelector('.modal-title');
+	const directorsEl = hiddenModalEl.querySelector('.modal-directors');
+	const actorsEl = hiddenModalEl.querySelector('.modal-actors');
+	const genresEl = hiddenModalEl.querySelector('.modal-genres');
+	imageEl.src = data.Poster !== 'N/A' ? data.Poster.replace('SX300', 'SX700') : NO_POSTER_IMAGE;
+	plotEl.textContent = Plot;
+	titleEl.textContent = Title;
+	directorsEl.textContent = Director;
+	actorsEl.textContent = Actors;
+	genresEl.textContent = Genre;
+	drawCircle(imdbRating);
 }
-barEl.style.strokeDasharray = CIRCUMFERENCE;
-
-
-
-
-
-
-
-
