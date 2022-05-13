@@ -123,19 +123,16 @@ function handleError(error) {
 	}
 	messageEl.textContent = errorMessage;
 }
-/* IntersectionObserver 관련 */
-const io = new IntersectionObserver(entries => {
-	entries.forEach(async entry => {
-		// 관찰 대상이 viewport 안에 들어온 경우 
-		if (entry.intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
+
+const io = new IntersectionObserver(async ([{intersectionRatio}]) => {
+		if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
 			loadingStart();
-			await new Promise(resolve => setTimeout(resolve, 1500));
-			currentPage++;
-			fetchData(title, type, year, currentPage).then(res => parseData(res.data));
+			await new Promise(resolve => setTimeout(resolve, 1000));
+			fetchData(title, type, year, ++currentPage).then(res => parseData(res.data));
 			loadingEnd();
 		}
-	})
-})
+});
+
 const targetEl = resultsSecEl.querySelector('.target-area');
 io.observe(targetEl);
 
