@@ -9,12 +9,12 @@ const makeYears = () => {
 	return arr;
 }
 const renderOption = () => {
-	const yearToOption = year => `<div class="option-container__option">
+	const YEAR_TEMPLATE = year => `<div class="option-container__option">
 	<input type="radio" class="option__radio" id="${year}" name="year">
 	<label class="option__label" for="${year}" data-value="${year}">${year}</label>
 	</div>`;
 	const years = makeYears();
-	const newOptions = years.reduce((years,year)=>years+yearToOption(year), "");
+	const newOptions = years.reduce((years,year)=>years+YEAR_TEMPLATE(year), "");
 	optionConEl.innerHTML = newOptions;
 };
 export default renderOption; 

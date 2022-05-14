@@ -5,81 +5,53 @@ import {
 	fetchData,
 	fetchDataById
 } from './api';
-
-numberAnimation();
-renderOption();
-
-/* selectbox 관련 */
-const searchSecEl = document.querySelector("#search");
+const get = target => document.querySelector(target);
+const searchSecEl = get("#search");
 const formEl = searchSecEl.querySelector(".form");
-let selectedBox;
+const selectboxConEl = formEl.querySelector(".selectbox-container");
+const selectBoxEls = document.querySelectorAll(".selectbox");
+const searchInputEl = formEl.querySelector('.search-input');
+const resultsSecEl = get('#results');
+const messageEl = resultsSecEl.querySelector('.message');
+const loaderEl = resultsSecEl.querySelector('.loader');
+const targetEl = resultsSecEl.querySelector('.target-area');
+const NO_POSTER_IMAGE = "./images/noPoster.png";
+const hiddenModalEl = get('.hidden-modal');
+const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
+const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
+let gridConEl = resultsSecEl.querySelector('.grid-container');
+let selectedBox, title, type, year, pageLength, currentPage;
 
-formEl.addEventListener("click", (event) => {
-	event.stopPropagation();
-	openOptions(event);
-	handleLabels(event);
-});
-document.body.addEventListener("click", () => {
-	if (!selectedBox) return;
-	// 열린 option 창이 2개 이상이면 한꺼번에 닫아 주기 
-	if (formEl.querySelectorAll('.selectbox--active').length > 1) {
-		formEl.querySelectorAll('.selectbox').forEach(elem =>
-			elem.classList.remove("selectbox--active")
-		);
-	}
-	selectedBox.classList.remove("selectbox--active");
-});
-
-function openOptions(e) {
+const openOptions = e => {
 	if (e.target.className !== "selectbox__displayWord") return;
-	selectedBox = e.target.parentNode;
+	selectedBox = e.target.closest('.selectbox');
 	selectedBox.classList.add('selectbox--active');
 }
-
-function handleLabels(e) {
+const handleLabels = e => {
 	if (e.target.className !== "option-container__option") return;
 	const option = e.target;
 	const label = option.querySelector("label");
 	const selectBox = option.parentNode.parentNode;
 	const selectBoxDisplay = selectBox.querySelector(".selectbox__displayWord");
 	selectBoxDisplay.innerHTML = label.innerHTML;
-	selectBox.setAttribute("data-option", label.getAttribute("data-value"));
+	selectBox.dataset.option = label.dataset.value;
 	selectBox.classList.remove("selectbox--active", "selectbox--unselect");
 }
-
-/* fetch 관련 */
-const selectBoxEls = document.querySelectorAll(".selectbox");
-const searchInputEl = formEl.querySelector('.search-input');
-const resultsSecEl = document.querySelector('#results');
-let gridConEl = resultsSecEl.querySelector('.grid-container');
-const messageEl = resultsSecEl.querySelector('.message');
-const loaderEl = resultsSecEl.querySelector('.loader');
-const NO_POSTER_IMAGE = "./images/noPoster.png";
-let title, type, year, pageLength;
-let currentPage = 1;
-formEl.addEventListener('submit', (e) => {
-	e.preventDefault();
-	loadingStart();
-	initApiParams();
-	renderMovies();
-	loadingEnd();
-});
 const loadingStart = () => loaderEl.classList.add('active');
-const loadingEnd = () => loaderEl.classList.remove('active');
-function initApiParams() {
+const loadingStop = () => loaderEl.classList.remove('active');
+const initApiParams = () => {
 	title = searchInputEl.value;
-	type = selectBoxEls[0].getAttribute("data-option") || "";
+	type = selectBoxEls[0].dataset.option || "";
 	currentPage = 1;
-	year = selectBoxEls[1].getAttribute("data-option") || "";
+	year = selectBoxEls[1].dataset.option || "";
 }
-
-function renderMovies() {
+const renderMovies = () => {
+	initApiParams();
 	searchInputEl.value = ""; // 검색창 초기화 
 	gridConEl.innerHTML = ""; // 그리드 영역 초기화
 	fetchData(title, type, year, currentPage).then(res => parseData(res.data));
 }
-
-function parseData(resData) {
+const parseData = resData => {
 	/* 에러처리 */
 	if (resData.Error) {
 		handleError(resData.Error);
@@ -91,16 +63,15 @@ function parseData(resData) {
 	renderSearchResults(resData);
 	updateGridHandler();
 }
-
-function renderSearchResults(data) {
+const renderSearchResults = data => {
 	messageEl.innerHTML = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
-	const newItems = data.Search.reduce((movies, movie) => movies + movieToGridItem(movie), "");
-	gridConEl.innerHTML += newItems;
+	const newItems = data.Search.reduce((movies, movie) => movies + MOVIE_TEMPLATE(movie), "");
+	gridConEl.insertAdjacentHTML("beforeend", newItems);
 }
-const movieToGridItem = movie =>
+const MOVIE_TEMPLATE = movie =>
 	`<div class="grid-item">
 		<div class="contents-poster">
-			<img src=${movie.Poster!=='N/A' ? movie.Poster : NO_POSTER_IMAGE} alt="poster">
+			<img src=${movie.Poster!=='N/A' ? movie.Poster : NO_POSTER_IMAGE} alt="poster" onerror="this.src='./images/noPoster.png'">
 		</div>
 		<div class="hover-contents">
 			<div class="hover-inner">
@@ -112,15 +83,11 @@ const movieToGridItem = movie =>
 		</div>
 	</div>`;
 
-function handleError(error) {
+const handleError = error => {
 	const NOT_FOUND = "Movie not found!";
-	const MANY_RESULT = "Too many results.";
+	//const MANY_RESULT = "Too many results.";
 	let errorMessage = "";
-	if (error === NOT_FOUND) {
-		errorMessage = `"${title}" 검색 결과가 없습니다.`;
-	} else if (error === MANY_RESULT) {
-		errorMessage = "검색 결과가 너무 많습니다.";
-	}
+	errorMessage = (error === NOT_FOUND) ? `"${title}" 검색 결과가 없습니다.` : "검색 결과가 너무 많습니다.";
 	messageEl.textContent = errorMessage;
 }
 
@@ -129,49 +96,38 @@ const io = new IntersectionObserver(async ([{intersectionRatio}]) => {
 			loadingStart();
 			await new Promise(resolve => setTimeout(resolve, 1000));
 			fetchData(title, type, year, ++currentPage).then(res => parseData(res.data));
-			loadingEnd();
+			loadingStop();
 		}
 });
 
-const targetEl = resultsSecEl.querySelector('.target-area');
-io.observe(targetEl);
-
 /* 모달창 관련 */
-function updateGridHandler() {
+const updateGridHandler = () => {
 	// 기존에 할당된 click 이벤트 핸들러 제거
 	gridConEl.removeEventListener('click', handleGridClick);
 	// .grid-container 요소 새로 받기 
-	gridConEl = document.querySelector('.grid-container');
+	gridConEl = get('.grid-container');
 	// 새로 받은 .grid-container 요소에 click 이벤트 핸들러 할당
 	gridConEl.addEventListener('click', handleGridClick);
 }
 
-function handleGridClick(e) {
+const handleGridClick = e => {
 	if (e.target.parentNode.className !== "contents-more") return;
-	const movieId = e.target.closest(".contents-more").getAttribute('data-value');
+	const movieId = e.target.closest(".contents-more").dataset.value;
 	renderModal(movieId);
 	/* 모달창을 제외한 배경 요소 스크롤 방지 */
 	document.body.style.overflow = "hidden";
 	hiddenModalEl.classList.add('active');
 }
 
-const hiddenModalEl = document.querySelector('.hidden-modal');
-const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
-const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
-modalCloseEl.addEventListener('click', handleModalClick);
-modalCurtainEl.addEventListener('click', handleModalClick);
-
-function handleModalClick(e) {
+const handleModalClick = e => {
 	/* 모달창을 제외한 배경 요소 스크롤 방지 해제 */
 	document.body.style.overflow = "scroll";
 	hiddenModalEl.classList.remove('active');
 }
 
-function renderModal(id) {
-	fetchDataById(id).then(res => parseModalData(res.data));
-}
+const renderModal = id => fetchDataById(id).then(res => parseModalData(res.data));
 
-function parseModalData(data) {
+const parseModalData = data => {
 	const {
 		Plot,
 		Title,
@@ -194,3 +150,35 @@ function parseModalData(data) {
 	genresEl.textContent = Genre;
 	drawCircle(imdbRating);
 }
+const init = () => {
+	numberAnimation();
+	renderOption();
+	selectboxConEl.addEventListener("click", (event) => {
+		event.stopPropagation();
+		openOptions(event);
+		handleLabels(event);
+	});
+	document.body.addEventListener("click", () => {
+		if (!selectedBox) return;
+		// 열린 option 창이 2개 이상이면 한꺼번에 닫아 주기 
+		if (formEl.querySelectorAll('.selectbox--active').length > 1) {
+			formEl.querySelectorAll('.selectbox').forEach(elem =>
+				elem.classList.remove("selectbox--active")
+			);
+		}
+		selectedBox.classList.remove("selectbox--active");
+	});
+	formEl.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const searched = searchInputEl.value;
+		// 검색어가 없거나 검색어가 직전의 검색어와 같을 경우 종료 
+		if(searched === "" || title === searched) return;
+		loadingStart();
+		renderMovies();
+		loadingStop();
+	});
+	modalCloseEl.addEventListener('click', handleModalClick);
+	modalCurtainEl.addEventListener('click', handleModalClick);
+	io.observe(targetEl);
+};
+init();
