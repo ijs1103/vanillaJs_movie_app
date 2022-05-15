@@ -43,6 +43,7 @@ const loadingStart = () => loaderEl.classList.add('active');
 const loadingStop = () => loaderEl.classList.remove('active');
 const bodyLoadingStart = () => bodyLoaderConEl.classList.add('active');
 const bodyLoadingStop = () => bodyLoaderConEl.classList.remove('active');
+const timer = () => new Promise(resolve => setTimeout(resolve, 1000));
 
 const initApiParams = () => {
 	title = searchInputEl.value;
@@ -99,7 +100,7 @@ const handleError = error => {
 const io = new IntersectionObserver(async ([{intersectionRatio}]) => {
 		if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
 			loadingStart();
-			await new Promise(resolve => setTimeout(resolve, 1000));
+			await timer();
 			fetchData(title, type, year, ++currentPage).then(res => parseData(res.data));
 			loadingStop();
 		}
@@ -115,15 +116,13 @@ const updateGridHandler = () => {
 	gridConEl.addEventListener('click', handleGridClick);
 }
 
-const handleGridClick = e => {
+const handleGridClick = async e => {
 	if (e.target.parentNode.className !== "contents-more") return;
 	const movieId = e.target.closest(".contents-more").dataset.value;
-	bodyLoadingStart();
 	renderModal(movieId);
 	/* 모달창을 제외한 배경 요소 스크롤 방지 */
 	document.body.style.overflow = "hidden";
 	hiddenModalEl.classList.add('active');
-	bodyLoadingStop();
 }
 
 const handleModalClick = e => {
@@ -175,7 +174,7 @@ const init = () => {
 		}
 		selectedBox.classList.remove("selectbox--active");
 	});
-	formEl.addEventListener('submit', (e) => {
+	formEl.addEventListener('submit', async (e) => {
 		e.preventDefault();
 		const searched = searchInputEl.value;
 		if (KOREAN.test(searched)) {
@@ -185,6 +184,7 @@ const init = () => {
 		// 검색어가 없거나, 검색어가 직전의 검색어와 같을 경우 종료
 		if(searched === "" || title === searched) return;
 		bodyLoadingStart();
+		await timer();
 		renderMovies();
 		bodyLoadingStop();
 	});
