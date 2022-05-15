@@ -20,6 +20,7 @@ const hiddenModalEl = get('.hidden-modal');
 const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
 const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
 const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
+const bodyLoaderConEl = get('.body-loader-container');
 let gridConEl = resultsSecEl.querySelector('.grid-container');
 let selectedBox, title, type, year, pageLength, currentPage;
 
@@ -40,6 +41,9 @@ const handleLabels = e => {
 }
 const loadingStart = () => loaderEl.classList.add('active');
 const loadingStop = () => loaderEl.classList.remove('active');
+const bodyLoadingStart = () => bodyLoaderConEl.classList.add('active');
+const bodyLoadingStop = () => bodyLoaderConEl.classList.remove('active');
+
 const initApiParams = () => {
 	title = searchInputEl.value;
 	type = selectBoxEls[0].dataset.option || "";
@@ -65,7 +69,7 @@ const parseData = resData => {
 	updateGridHandler();
 }
 const renderSearchResults = data => {
-	messageEl.textContent = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
+	messageEl.innerHTML = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
 	const newItems = data.Search.reduce((movies, movie) => movies + MOVIE_TEMPLATE(movie), "");
 	gridConEl.insertAdjacentHTML("beforeend", newItems);
 }
@@ -114,10 +118,12 @@ const updateGridHandler = () => {
 const handleGridClick = e => {
 	if (e.target.parentNode.className !== "contents-more") return;
 	const movieId = e.target.closest(".contents-more").dataset.value;
+	bodyLoadingStart();
 	renderModal(movieId);
 	/* 모달창을 제외한 배경 요소 스크롤 방지 */
 	document.body.style.overflow = "hidden";
 	hiddenModalEl.classList.add('active');
+	bodyLoadingStop();
 }
 
 const handleModalClick = e => {
@@ -178,9 +184,9 @@ const init = () => {
 		} 
 		// 검색어가 없거나, 검색어가 직전의 검색어와 같을 경우 종료
 		if(searched === "" || title === searched) return;
-		loadingStart();
+		bodyLoadingStart();
 		renderMovies();
-		loadingStop();
+		bodyLoadingStop();
 	});
 
 	modalCloseEl.addEventListener('click', handleModalClick);
