@@ -19,6 +19,7 @@ const NO_POSTER_IMAGE = "./images/noPoster.png";
 const hiddenModalEl = get('.hidden-modal');
 const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
 const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
+const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 let gridConEl = resultsSecEl.querySelector('.grid-container');
 let selectedBox, title, type, year, pageLength, currentPage;
 
@@ -64,7 +65,7 @@ const parseData = resData => {
 	updateGridHandler();
 }
 const renderSearchResults = data => {
-	messageEl.innerHTML = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
+	messageEl.textContent = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
 	const newItems = data.Search.reduce((movies, movie) => movies + MOVIE_TEMPLATE(movie), "");
 	gridConEl.insertAdjacentHTML("beforeend", newItems);
 }
@@ -171,12 +172,17 @@ const init = () => {
 	formEl.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const searched = searchInputEl.value;
-		// 검색어가 없거나 검색어가 직전의 검색어와 같을 경우 종료 
+		if (KOREAN.test(searched)) {
+			messageEl.textContent = "영어로 검색하세요.";
+			return;
+		} 
+		// 검색어가 없거나, 검색어가 직전의 검색어와 같을 경우 종료
 		if(searched === "" || title === searched) return;
 		loadingStart();
 		renderMovies();
 		loadingStop();
 	});
+
 	modalCloseEl.addEventListener('click', handleModalClick);
 	modalCurtainEl.addEventListener('click', handleModalClick);
 	io.observe(targetEl);
