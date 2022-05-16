@@ -55,7 +55,7 @@ const renderMovies = () => {
 	initApiParams();
 	searchInputEl.value = ""; // 검색창 초기화 
 	gridConEl.innerHTML = ""; // 그리드 영역 초기화
-	fetchData(title, type, year, currentPage).then(res => parseData(res.data));
+	fetchData(title, type, year, currentPage).then(res => parseData(res.data)).catch(error => alert(error));
 }
 const parseData = resData => {
 	/* 에러처리 */
@@ -97,13 +97,15 @@ const handleError = error => {
 	messageEl.textContent = errorMessage;
 }
 
-const io = new IntersectionObserver(async ([{intersectionRatio}]) => {
-		if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
-			loadingStart();
-			await timer();
-			fetchData(title, type, year, ++currentPage).then(res => parseData(res.data));
-			loadingStop();
-		}
+const io = new IntersectionObserver(async ([{
+	intersectionRatio
+}]) => {
+	if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
+		loadingStart();
+		await timer();
+		fetchData(title, type, year, ++currentPage).then(res => parseData(res.data)).catch(error => alert(error));
+		loadingStop();
+	}
 });
 
 /* 모달창 관련 */
@@ -125,13 +127,7 @@ const handleGridClick = async e => {
 	hiddenModalEl.classList.add('active');
 }
 
-const handleModalClick = e => {
-	/* 모달창을 제외한 배경 요소 스크롤 방지 해제 */
-	document.body.style.overflow = "scroll";
-	hiddenModalEl.classList.remove('active');
-}
-
-const renderModal = id => fetchDataById(id).then(res => parseModalData(res.data));
+const renderModal = id => fetchDataById(id).then(res => parseModalData(res.data)).catch(error => alert(error));
 
 const parseModalData = data => {
 	const {
@@ -156,39 +152,46 @@ const parseModalData = data => {
 	genresEl.textContent = Genre;
 	drawCircle(imdbRating);
 }
+const handleSelectBoxClick = (e) => {
+	e.stopPropagation();
+	openOptions(e);
+	handleLabels(e);
+}
+const handleSelectBoxClose = () => {
+	if (!selectedBox) return;
+	// 열린 option 창이 2개 이상이면 한꺼번에 닫아 주기 
+	if (formEl.querySelectorAll('.selectbox--active').length > 1) {
+		formEl.querySelectorAll('.selectbox').forEach(elem =>
+			elem.classList.remove("selectbox--active")
+		);
+	}
+	selectedBox.classList.remove("selectbox--active");
+}
+const handleFormClick = async (e) => {
+	e.preventDefault();
+	const searched = searchInputEl.value;
+	if (KOREAN.test(searched)) {
+		messageEl.textContent = "영어로 검색하세요.";
+		return;
+	}
+	// 검색어가 없거나, 검색어가 직전의 검색어와 같을 경우 종료
+	if (searched === "" || title === searched) return;
+	bodyLoadingStart();
+	await timer();
+	renderMovies();
+	bodyLoadingStop();
+}
+const handleModalClick = e => {
+	/* 모달창을 제외한 배경 요소 스크롤 방지 해제 */
+	document.body.style.overflow = "scroll";
+	hiddenModalEl.classList.remove('active');
+}
 const init = () => {
 	numberAnimation();
 	renderOption();
-	selectboxConEl.addEventListener("click", (event) => {
-		event.stopPropagation();
-		openOptions(event);
-		handleLabels(event);
-	});
-	document.body.addEventListener("click", () => {
-		if (!selectedBox) return;
-		// 열린 option 창이 2개 이상이면 한꺼번에 닫아 주기 
-		if (formEl.querySelectorAll('.selectbox--active').length > 1) {
-			formEl.querySelectorAll('.selectbox').forEach(elem =>
-				elem.classList.remove("selectbox--active")
-			);
-		}
-		selectedBox.classList.remove("selectbox--active");
-	});
-	formEl.addEventListener('submit', async (e) => {
-		e.preventDefault();
-		const searched = searchInputEl.value;
-		if (KOREAN.test(searched)) {
-			messageEl.textContent = "영어로 검색하세요.";
-			return;
-		} 
-		// 검색어가 없거나, 검색어가 직전의 검색어와 같을 경우 종료
-		if(searched === "" || title === searched) return;
-		bodyLoadingStart();
-		await timer();
-		renderMovies();
-		bodyLoadingStop();
-	});
-
+	selectboxConEl.addEventListener("click", handleSelectBoxClick);
+	document.body.addEventListener("click", handleSelectBoxClose);
+	formEl.addEventListener('submit', handleFormClick);
 	modalCloseEl.addEventListener('click', handleModalClick);
 	modalCurtainEl.addEventListener('click', handleModalClick);
 	io.observe(targetEl);
