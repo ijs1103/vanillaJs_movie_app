@@ -174,8 +174,8 @@ const handleFormClick = async (e) => {
 		messageEl.textContent = "영어로 검색하세요.";
 		return;
 	}
-	// 검색어가 없거나, 검색어가 직전의 검색어와 같을 경우 종료
-	if (searched === "" || title === searched) return;
+	// 검색어가 없거나, select 박스의 옵션값이 변경되지 않고 검색어가 직전의 검색어와 같을 경우 종료
+	if (searched === "" || title === searched && type === selectBoxEls[0].dataset.option && year === selectBoxEls[1].dataset.option) return;
 	bodyLoadingStart();
 	await timer();
 	renderMovies();
