@@ -270,6 +270,7 @@ main section#search .form-container .form .option-container .option__label {
 
 /* RESULTS */
 section#results {
+  background: #262626;
   position: relative;
 }
 
@@ -567,7 +568,8 @@ section#results .grid-container .grid-item .contents-more span {
   z-index: 99;
 }
 
-.body-loader-container.active .body-loader-curtain, .body-loader-container.active .body-loader {
+.body-loader-container.active .body-loader-curtain,
+.body-loader-container.active .body-loader {
   display: block;
 }
 
