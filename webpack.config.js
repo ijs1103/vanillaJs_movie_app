@@ -47,7 +47,7 @@ module.exports = {
 				{ from: 'scss' , to: 'scss'},
 			]
 		}),
-		new Dotenv()
+		new Dotenv({systemvars: true})
 	],
 
 	devServer: {
