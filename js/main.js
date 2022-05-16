@@ -14,7 +14,7 @@ const searchInputEl = formEl.querySelector('.search-input');
 const resultsSecEl = get('#results');
 const messageEl = resultsSecEl.querySelector('.message');
 const loaderEl = resultsSecEl.querySelector('.loader');
-const targetEl = resultsSecEl.querySelector('.target-area');
+const targetEl = get('.target-area');
 const NO_POSTER_IMAGE = "./images/noPoster.png";
 const hiddenModalEl = get('.hidden-modal');
 const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
@@ -22,7 +22,7 @@ const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
 const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 const bodyLoaderConEl = get('.body-loader-container');
 let gridConEl = resultsSecEl.querySelector('.grid-container');
-let selectedBox, title, type, year, pageLength, currentPage;
+let selectedBox, title, type, year, pageLength, currentPage, isSearched;
 
 const openOptions = e => {
 	if (e.target.className !== "selectbox__displayWord") return;
@@ -48,8 +48,9 @@ const timer = () => new Promise(resolve => setTimeout(resolve, 1000));
 const initApiParams = () => {
 	title = searchInputEl.value;
 	type = selectBoxEls[0].dataset.option || "";
-	currentPage = 1;
 	year = selectBoxEls[1].dataset.option || "";
+	currentPage = 1;
+	pageLength = 1;
 }
 const renderMovies = () => {
 	initApiParams();
@@ -98,9 +99,10 @@ const handleError = error => {
 }
 
 const io = new IntersectionObserver(async ([{
-	intersectionRatio
+	isIntersecting
 }]) => {
-	if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage && currentPage!==1) {
+	if(!isIntersecting) return;
+	if (pageLength > 1 && pageLength > currentPage) {
 		loadingStart();
 		await timer();
 		fetchData(title, type, year, ++currentPage).then(res => parseData(res.data)).catch(error => alert(error));
