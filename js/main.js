@@ -100,7 +100,7 @@ const handleError = error => {
 const io = new IntersectionObserver(async ([{
 	intersectionRatio
 }]) => {
-	if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage) {
+	if (intersectionRatio > 0 && pageLength > 1 && pageLength > currentPage && currentPage!==1) {
 		loadingStart();
 		await timer();
 		fetchData(title, type, year, ++currentPage).then(res => parseData(res.data)).catch(error => alert(error));
@@ -167,7 +167,7 @@ const handleSelectBoxClose = () => {
 	}
 	selectedBox.classList.remove("selectbox--active");
 }
-const handleFormClick = async (e) => {
+const handleSubmit = async (e) => {
 	e.preventDefault();
 	const searched = searchInputEl.value;
 	if (KOREAN.test(searched)) {
@@ -191,7 +191,7 @@ const init = () => {
 	renderOption();
 	selectboxConEl.addEventListener("click", handleSelectBoxClick);
 	document.body.addEventListener("click", handleSelectBoxClose);
-	formEl.addEventListener('submit', handleFormClick);
+	formEl.addEventListener('submit', handleSubmit);
 	modalCloseEl.addEventListener('click', handleModalClick);
 	modalCurtainEl.addEventListener('click', handleModalClick);
 	io.observe(targetEl);
