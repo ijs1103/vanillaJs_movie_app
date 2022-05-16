@@ -1,3 +1,4 @@
+import '../scss/main.scss';
 import numberAnimation from './numberAnimation';
 import renderOption from './renderOption';
 import drawCircle from './drawCircle';
@@ -14,7 +15,7 @@ const searchInputEl = formEl.querySelector('.search-input');
 const resultsSecEl = get('#results');
 const messageEl = resultsSecEl.querySelector('.message');
 const loaderEl = resultsSecEl.querySelector('.loader');
-const targetEl = get('.target-area');
+const targetEl = resultsSecEl.querySelector('.target-area');
 const NO_POSTER_IMAGE = "./images/noPoster.png";
 const hiddenModalEl = get('.hidden-modal');
 const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
@@ -22,7 +23,7 @@ const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
 const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 const bodyLoaderConEl = get('.body-loader-container');
 let gridConEl = resultsSecEl.querySelector('.grid-container');
-let selectedBox, title, type, year, pageLength, currentPage, isSearched;
+let selectedBox, title, type, year, pageLength, currentPage;
 
 const openOptions = e => {
 	if (e.target.className !== "selectbox__displayWord") return;
@@ -101,7 +102,7 @@ const handleError = error => {
 const io = new IntersectionObserver(async ([{
 	isIntersecting
 }]) => {
-	if(!isIntersecting) return;
+	if (!isIntersecting) return;
 	if (pageLength > 1 && pageLength > currentPage) {
 		loadingStart();
 		await timer();
@@ -120,18 +121,21 @@ const updateGridHandler = () => {
 	gridConEl.addEventListener('click', handleGridClick);
 }
 
-const handleGridClick = async e => {
+const handleGridClick = e => {
 	if (e.target.parentNode.className !== "contents-more") return;
 	const movieId = e.target.closest(".contents-more").dataset.value;
 	renderModal(movieId);
-	/* 모달창을 제외한 배경 요소 스크롤 방지 */
-	document.body.style.overflow = "hidden";
-	hiddenModalEl.classList.add('active');
 }
 
-const renderModal = id => fetchDataById(id).then(res => parseModalData(res.data)).catch(error => alert(error));
+const renderModal = id => {
+	fetchDataById(id).then(res => parseModalData(res.data)).then(res => {
+		/* 모달창을 제외한 배경 요소 스크롤 방지 */
+		document.body.style.overflow = "hidden";
+		hiddenModalEl.classList.add('active');
+	}).catch(error => alert(error));
+}
 
-const parseModalData = data => {
+const parseModalData = async data => {
 	const {
 		Plot,
 		Title,
