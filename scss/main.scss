@@ -4,12 +4,17 @@
 /* HEADER */
 header {
 	font-size: 1.3rem;
-	color: white;
+	color: #fff;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 50px;
-	background-color: map-get($color, bgc-header);
+	position: fixed;
+	background: rgba(0, 0, 0, .75);
+	-webkit-backdrop-filter: saturate(180%) blur(15px);
+	-moz-backdrop-filter: saturate(180%) blur(15px);
+	-o-backdrop-filter: saturate(180%) blur(15px);
+	backdrop-filter: saturate(180%) blur(15px);
 	z-index: 10;
 
 	.header__inner {
@@ -53,13 +58,76 @@ header {
 main {
 	background-color: #141414;
 	min-height: 100vh;
-
+	padding-top: 50px;
+	
 	/* SEARCH */
 	section#search {
 		width: 1000px;
 		margin: 0 auto;
 		padding: 30px 0;
-
+		min-height: 50vh;
+		.video-wrap {
+			top: 0;
+			left: 0;
+			position: absolute;
+			width: 100%;
+			height: 100vh;
+			z-index: 1;
+			&.inactive {
+				z-index: -1;
+				display: none;
+			}
+			video {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+			.video-close {
+				position: absolute;
+				bottom: 50px;
+				right: 50px;
+				width: 130px;
+				padding: 10px;
+				border: 2px solid;
+				border-radius: 4px;
+				color: #fff;
+				font-size: 16px;
+				font-weight: 700;
+				text-align: center;
+				cursor: pointer;
+				box-sizing: border-box;
+				display: block;
+				transition: .4s;
+				&:hover {
+					color: #333;
+				}
+			}
+		}
+		@keyframes ani {
+			0% {
+				opacity: 0;
+				transform: translateY(30px);
+			}
+			100% {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		&.ani-active {
+			.sub-title, .main-title, .search-container, .selectbox__displayWord {
+				animation: ani 1s ease;
+			} 
+			.search-container {
+				opacity: 0;
+				animation-fill-mode: forwards;
+				animation-delay: .5s;
+			}
+			.selectbox__displayWord {
+				opacity: 0;
+				animation-fill-mode: forwards;
+				animation-delay: 1s;
+			}
+		}
 		.sub-title,
 		.main-title {
 			text-align: center;
@@ -82,25 +150,43 @@ main {
 			.form {
 				width: 1000px;
 				margin: 0 auto;
-
-				.input-button-container {
+				
+				.search-container {
+					margin-top: 30px;
 					display: flex;
+					justify-content: center;
 				}
-
-				.search-input {
-					font-size: 3.2rem;
-					width: 800px;
-					border: none;
-					padding: 24px 48px;
-					background-color: map-get($color, bgc-select);
-					color: map-get($color, option-color);
-					border-radius: 8px;
-					border: 1px solid transparent;
-
-					&:focus {
-						@include onFocus;
+				.input-container {
+					position: relative;
+					.search-icon {
+						position: absolute;
+						left: 20px;
+						height: 100%;
+						display: flex;
+						align-items: center;
+					
+						.material-icons {
+							font-size: 40px;
+							display: block;
+							color: white;
+						}
+					}
+					.search-input {
+						font-size: 3.2rem;
+						width: 800px;
+						padding: 24px 0 24px 72px;
+						background-color: transparent;
+						color: #fff;
+						outline: none;
+						border: none;
+						border-bottom: 1px solid white;
+						transition: border 1s;
+						&:focus {
+							border-bottom: 1px solid red;
+						}
 					}
 				}
+
 
 				.form__submit-button {
 					width: 195px;
@@ -121,7 +207,7 @@ main {
 				}
 
 				.selectbox-container {
-					margin-top: 20px;
+					margin-top: 40px;
 					display: flex;
 					justify-content: flex-end;
 				}
@@ -142,6 +228,7 @@ main {
 						max-height: 240px;
 						opacity: 1;
 						overflow-y: scroll;
+						z-index: 10;
 					}
 
 					.selectbox__displayWord::after {
@@ -184,7 +271,6 @@ main {
 					border-radius: 10px;
 					overflow: hidden;
 					z-index: 1;
-
 					.option-container__option:hover {
 						background-color: map-get($color, bgc-select--hover);
 					}
@@ -205,9 +291,11 @@ main {
 
 /* RESULTS */
 section#results {
-	background: rgb(38, 38, 38);
+	&.active {
+		background-color:#242424;
+	}
 	position: relative;
-
+	min-height: 50vh;
 	.message {
 		padding-top: 20px;
 		text-align: center;
@@ -253,7 +341,7 @@ section#results {
 
 			&:hover {
 				transform: translateY(-10px);
-				box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+				box-shadow: rgba(255,0,0,.35) 0px 20px 35px, rgba(255,0,0,.12) 0px -12px 30px, rgba(255,0,0,.12) 0px 4px 6px, rgba(255,0,0,.17) 0px 12px 13px, rgba(255,0,0,.09) 0px -3px 5px;
 				z-index: 2;
 
 				.hover-contents {
@@ -310,10 +398,9 @@ section#results {
 .target-area {
 	bottom: 0;
 	left: 0;
-	height: 100px;
+	height: 50px;
 	width: 100%;
 	position: absolute;
-
 	.loader {
 		@include spinner;
 	}
@@ -351,7 +438,7 @@ section#results {
 		z-index: 2;
 
 		.modal-bg {
-			height: 500px;
+			height: 600px;
 
 			img {
 				width: 100%;

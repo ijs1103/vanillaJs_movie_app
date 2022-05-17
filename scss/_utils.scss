@@ -5,14 +5,8 @@ $color : (bgc-header: #000,
 	bgc-select--hover: red,
 	option-color: rgb(247, 229, 229),
 	detail-label: #777,
-	bgc-modal: #181818,
+	bgc-modal: #000,
 	button: red);
-
-@mixin onFocus {
-	outline: none;
-	border: 1px solid red;
-	box-shadow: 0 0 0 0.25rem rgb(187, 29, 29);
-}
 
 @mixin spinner {
 	&.active {

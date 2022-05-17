@@ -1,5 +1,5 @@
 /* option 출시년도 렌더링 관련 */
-const optionConEl = document.querySelector('.option-container.year'); // 출시년도 option-container
+const optionConEl = document.querySelector('.option-container.year');
 const makeYears = () => {
 	const arr = [];
 	const thisYear = new Date().getFullYear();

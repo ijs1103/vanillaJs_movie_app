@@ -22,13 +22,16 @@ const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
 const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
 const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 const bodyLoaderConEl = get('.body-loader-container');
+const videoWrapEl = get('.video-wrap');
+const videoEl = videoWrapEl.querySelector('video');
+const videoCloseEl = get('.video-close');
 let gridConEl = resultsSecEl.querySelector('.grid-container');
 let selectedBox, title, type, year, pageLength, currentPage;
 
 const openOptions = e => {
 	if (e.target.className !== "selectbox__displayWord") return;
 	selectedBox = e.target.closest('.selectbox');
-	selectedBox.classList.add('selectbox--active');
+	selectedBox.classList.toggle('selectbox--active');
 }
 const handleLabels = e => {
 	if (e.target.className !== "option-container__option") return;
@@ -175,31 +178,42 @@ const handleSelectBoxClose = () => {
 }
 const handleSubmit = async (e) => {
 	e.preventDefault();
+	resultsSecEl.classList.add('active');
 	const searched = searchInputEl.value;
 	if (KOREAN.test(searched)) {
 		messageEl.textContent = "영어로 검색하세요.";
 		return;
 	}
 	// 검색어가 없거나, select 박스의 옵션값이 변경되지 않고 검색어가 직전의 검색어와 같을 경우 종료
-	if (searched === "" || title === searched && type === selectBoxEls[0].dataset.option && year === selectBoxEls[1].dataset.option) return;
+	if (searched.replace(/ /gi,"") === "" || title === searched && type === selectBoxEls[0].dataset.option && year === selectBoxEls[1].dataset.option) return;
 	bodyLoadingStart();
 	await timer();
 	renderMovies();
 	bodyLoadingStop();
 }
-const handleModalClick = e => {
+const handleModalClick = () => {
 	/* 모달창을 제외한 배경 요소 스크롤 방지 해제 */
 	document.body.style.overflow = "scroll";
 	hiddenModalEl.classList.remove('active');
 }
-const init = () => {
+const handleVideoStop = () => {
+	videoWrapEl.classList.add('inactive');
+	searchSecEl.classList.add('ani-active');
 	numberAnimation();
+};
+const handleVideoCloseClick = () => {
+	videoEl.pause();
+}
+const init = () => {
 	renderOption();
 	selectboxConEl.addEventListener("click", handleSelectBoxClick);
 	document.body.addEventListener("click", handleSelectBoxClose);
 	formEl.addEventListener('submit', handleSubmit);
 	modalCloseEl.addEventListener('click', handleModalClick);
 	modalCurtainEl.addEventListener('click', handleModalClick);
+	videoEl.addEventListener("ended", handleVideoStop);
+	videoEl.addEventListener("pause", handleVideoStop);
+	videoCloseEl.addEventListener("click", handleVideoCloseClick);
 	io.observe(targetEl);
 };
 init();

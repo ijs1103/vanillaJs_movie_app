@@ -4,11 +4,12 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>짭플릭스</title>
+	<title>JJOBFLIX</title>
 	<!-- google icons -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<!-- local files -->
 	<script type="defer" src="./js/main.js"></script>
+	<link rel="preload" as="video" href="./images/NetflixIntro.mp4">
 </head>
 
 <body>
@@ -31,6 +32,10 @@
 	</header>
 	<main>
 		<section id="search">
+			<div class="video-wrap">
+				<video autoplay muted preload="auto" src="./images/NetflixIntro.mp4"></video>
+				<div class="video-close">건너뛰기</div>
+			</div>
 			<h2 class="sub-title">
 				현재 최대 <span class="count" data="280000">0</span>개의 포스터 이미지<br />
 				매일 최대 해상도 2000 x 3000로 업데이트 되고 있습니다.
@@ -38,9 +43,16 @@
 			<h1 class="main-title">좋아하는 컨텐츠를 검색 해보세요.</h1>
 			<div class="form-container">
 				<form class="form">
-					<div class="input-button-container">
-						<input class="search-input" name="title" type="text" placeholder="영화, 시리즈, 에피소드" />
-						<button class="form__submit-button" type="submit">검색</button>
+					<div class="search-container">
+						<div class="input-container">
+							<div class="search-icon">
+								<span class="material-icons">
+									search
+								</span>
+							</div>
+							<input class="search-input" name="title" type="text" placeholder="영화, 시리즈, 에피소드" />
+							<!-- <button class="form__submit-button" type="submit">검색</button> -->
+						</div>
 					</div>
 					<div class="selectbox-container">
 						<div class="selectbox selectbox--unselect" data-option="">
@@ -75,7 +87,7 @@
 		</section>
 		<section id="results">
 			<div class="section-inner">
-				<div class="message">검색 결과</div>
+				<div class="message"></div>
 				<div class="grid-container"></div>
 			</div>
 			<div class="target-area">
