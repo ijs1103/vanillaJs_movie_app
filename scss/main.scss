@@ -115,22 +115,23 @@ main {
 		}
 		&.ani-active {
 			.sub-title, .main-title, .search-container, .selectbox__displayWord {
-				animation: ani 1s ease;
-			} 
-			.search-container {
-				opacity: 0;
+				animation: ani 1s;
 				animation-fill-mode: forwards;
+			}
+			.main-title {
 				animation-delay: .5s;
 			}
-			.selectbox__displayWord {
-				opacity: 0;
-				animation-fill-mode: forwards;
+			.search-container {
 				animation-delay: 1s;
+			}
+			.selectbox__displayWord {
+				animation-delay: 1.5s;
 			}
 		}
 		.sub-title,
 		.main-title {
 			text-align: center;
+			opacity: 0;
 		}
 
 		.sub-title {
@@ -152,6 +153,7 @@ main {
 				margin: 0 auto;
 				
 				.search-container {
+					opacity: 0;
 					margin-top: 30px;
 					display: flex;
 					justify-content: center;
@@ -244,6 +246,7 @@ main {
 				}
 
 				.selectbox__displayWord {
+					opacity: 0;
 					text-align: center;
 					font-size: 2.2rem;
 					position: relative;
