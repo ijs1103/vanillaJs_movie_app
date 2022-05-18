@@ -20,6 +20,12 @@ const NO_POSTER_IMAGE = "./images/noPoster.png";
 const hiddenModalEl = get('.hidden-modal');
 const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
 const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
+const imageEl = hiddenModalEl.querySelector('.modal-image');
+const plotEl = hiddenModalEl.querySelector('.modal-plot');
+const titleEl = hiddenModalEl.querySelector('.modal-title');
+const directorsEl = hiddenModalEl.querySelector('.modal-directors');
+const actorsEl = hiddenModalEl.querySelector('.modal-actors');
+const genresEl = hiddenModalEl.querySelector('.modal-genres');
 const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 const bodyLoaderConEl = get('.body-loader-container');
 const videoWrapEl = get('.video-wrap');
@@ -43,11 +49,10 @@ const handleLabels = e => {
 	selectBox.dataset.option = label.dataset.value;
 	selectBox.classList.remove("selectbox--active", "selectbox--unselect");
 }
-const loadingStart = () => loaderEl.classList.add('active');
-const loadingStop = () => loaderEl.classList.remove('active');
+const fetchMoreLoadingStart = () => loaderEl.classList.add('active');
+const fetchMoreLoadingStop = () => loaderEl.classList.remove('active');
 const bodyLoadingStart = () => bodyLoaderConEl.classList.add('active');
 const bodyLoadingStop = () => bodyLoaderConEl.classList.remove('active');
-const timer = () => new Promise(resolve => setTimeout(resolve, 1000));
 
 const initApiParams = () => {
 	title = searchInputEl.value;
@@ -60,7 +65,8 @@ const renderMovies = () => {
 	initApiParams();
 	searchInputEl.value = ""; // 검색창 초기화 
 	gridConEl.innerHTML = ""; // 그리드 영역 초기화
-	fetchData(title, type, year, currentPage).then(res => parseData(res.data)).catch(error => alert(error));
+	setTimeout(bodyLoadingStart);
+	fetchData(title, type, year, currentPage).then(res => parseData(res.data)).then(res => bodyLoadingStop()).catch(error => alert(error));
 }
 const parseData = resData => {
 	/* 에러처리 */
@@ -107,10 +113,8 @@ const io = new IntersectionObserver(async ([{
 }]) => {
 	if (!isIntersecting) return;
 	if (pageLength > 1 && pageLength > currentPage) {
-		loadingStart();
-		await timer();
-		fetchData(title, type, year, ++currentPage).then(res => parseData(res.data)).catch(error => alert(error));
-		loadingStop();
+		setTimeout(fetchMoreLoadingStart);
+		fetchData(title, type, year, ++currentPage).then(res => parseData(res.data)).then(res => fetchMoreLoadingStop()).catch(error => alert(error));
 	}
 });
 
@@ -147,12 +151,6 @@ const parseModalData = async data => {
 		Genre,
 		imdbRating
 	} = data;
-	const imageEl = hiddenModalEl.querySelector('.modal-image');
-	const plotEl = hiddenModalEl.querySelector('.modal-plot');
-	const titleEl = hiddenModalEl.querySelector('.modal-title');
-	const directorsEl = hiddenModalEl.querySelector('.modal-directors');
-	const actorsEl = hiddenModalEl.querySelector('.modal-actors');
-	const genresEl = hiddenModalEl.querySelector('.modal-genres');
 	imageEl.src = data.Poster !== 'N/A' ? data.Poster.replace('SX300', 'SX700') : NO_POSTER_IMAGE;
 	plotEl.textContent = Plot;
 	titleEl.textContent = Title;
@@ -186,10 +184,7 @@ const handleSubmit = async (e) => {
 	}
 	// 검색어가 없거나, select 박스의 옵션값이 변경되지 않고 검색어가 직전의 검색어와 같을 경우 종료
 	if (searched.replace(/ /gi,"") === "" || title === searched && type === selectBoxEls[0].dataset.option && year === selectBoxEls[1].dataset.option) return;
-	bodyLoadingStart();
-	await timer();
 	renderMovies();
-	bodyLoadingStop();
 }
 const handleModalClick = () => {
 	/* 모달창을 제외한 배경 요소 스크롤 방지 해제 */
