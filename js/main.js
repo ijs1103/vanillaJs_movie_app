@@ -16,7 +16,6 @@ const resultsSecEl = get('#results');
 const messageEl = resultsSecEl.querySelector('.message');
 const loaderEl = resultsSecEl.querySelector('.loader');
 const targetEl = resultsSecEl.querySelector('.target-area');
-const NO_POSTER_IMAGE = "./images/noPoster.png";
 const hiddenModalEl = get('.hidden-modal');
 const modalCloseEl = hiddenModalEl.querySelector('.modal-close');
 const modalCurtainEl = hiddenModalEl.querySelector('.modal-curtain');
@@ -26,11 +25,14 @@ const titleEl = hiddenModalEl.querySelector('.modal-title');
 const directorsEl = hiddenModalEl.querySelector('.modal-directors');
 const actorsEl = hiddenModalEl.querySelector('.modal-actors');
 const genresEl = hiddenModalEl.querySelector('.modal-genres');
-const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
+const imdbLinkEl = hiddenModalEl.querySelector('.imdb-link'); 
 const bodyLoaderConEl = get('.body-loader-container');
 const videoWrapEl = get('.video-wrap');
 const videoEl = videoWrapEl.querySelector('video');
 const videoCloseEl = get('.video-close');
+const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
+const NO_POSTER_IMAGE = "./images/noPoster.png";
+const IMDB_BASE_URL = "https://www.imdb.com/title/";
 let gridConEl = resultsSecEl.querySelector('.grid-container');
 let selectedBox, title, type, year, pageLength, currentPage;
 
@@ -118,7 +120,6 @@ const io = new IntersectionObserver(async ([{
 	}
 });
 
-/* 모달창 관련 */
 const updateGridHandler = () => {
 	// 기존에 할당된 click 이벤트 핸들러 제거
 	gridConEl.removeEventListener('click', handleGridClick);
@@ -149,7 +150,8 @@ const parseModalData = async data => {
 		Director,
 		Actors,
 		Genre,
-		imdbRating
+		imdbRating,
+		imdbID
 	} = data;
 	imageEl.src = data.Poster !== 'N/A' ? data.Poster.replace('SX300', 'SX700') : NO_POSTER_IMAGE;
 	plotEl.textContent = Plot;
@@ -157,6 +159,7 @@ const parseModalData = async data => {
 	directorsEl.textContent = Director;
 	actorsEl.textContent = Actors;
 	genresEl.textContent = Genre;
+	imdbLinkEl.setAttribute('href', IMDB_BASE_URL+imdbID);
 	drawCircle(imdbRating);
 }
 const handleSelectBoxClick = (e) => {
@@ -196,9 +199,7 @@ const handleVideoStop = () => {
 	searchSecEl.classList.add('ani-active');
 	numberAnimation();
 };
-const handleVideoCloseClick = () => {
-	videoEl.pause();
-}
+const handleVideoCloseClick = () => videoEl.pause();
 const init = () => {
 	renderOption();
 	selectboxConEl.addEventListener("click", handleSelectBoxClick);
