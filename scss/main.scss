@@ -35,10 +35,9 @@ header {
 			color: map-get($color, link);
 			border-radius: 500px;
 			padding: 0 10px;
-
 			&:hover {
-				outline: 1px solid map-get($color, link--hover);
-				color: map-get($color, link--hover);
+				outline: 1px solid;
+				color: #f00;
 			}
 
 			.random-watch {
@@ -170,7 +169,7 @@ main {
 						.material-icons {
 							font-size: 40px;
 							display: block;
-							color: white;
+							color: #fff;
 						}
 					}
 					.search-input {
@@ -181,30 +180,11 @@ main {
 						color: #fff;
 						outline: none;
 						border: none;
-						border-bottom: 1px solid white;
+						border-bottom: 1px solid;
 						transition: border 1s;
 						&:focus {
-							border-bottom: 1px solid red;
+							border-bottom: 1px solid #f00;
 						}
-					}
-				}
-
-
-				.form__submit-button {
-					width: 195px;
-					padding: 24px 48px;
-					outline: 0;
-					border: none;
-					border-radius: 8px;
-					background-color: map-get($color, button);
-					cursor: pointer;
-					transition: background 0.3s;
-					margin-left: 5px;
-					font-size: 30px;
-
-					&:hover {
-						background-color: rgb(255, 252, 241);
-						color: map-get($color, button);
 					}
 				}
 
@@ -275,7 +255,7 @@ main {
 					overflow: hidden;
 					z-index: 1;
 					.option-container__option:hover {
-						background-color: map-get($color, bgc-select--hover);
+						background-color: #f00;
 					}
 
 					.option__radio {
@@ -307,7 +287,7 @@ section#results {
 		font-weight: bold;
 
 		span {
-			color: red;
+			color: #f00;
 		}
 
 		&.results-on {
@@ -384,8 +364,8 @@ section#results {
 
 				&:hover {
 					span {
-						color: red;
-						outline-color: red;
+						color: #f00;
+						outline-color: #f00;
 					}
 				}
 
@@ -408,30 +388,31 @@ section#results {
 		@include spinner;
 	}
 }
-
 .hidden-modal {
-	display: none;
-
 	&.active {
-		display: block;
+		opacity: 1;
+		height: 100%;
+		pointer-events: all;
+		.modal-inner {
+			top: 50%;
+			transform: translate(-50%, -50%);
+		}
 	}
-
+	height:0;
+	opacity: 0;
+	pointer-events: none;
 	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 11;
 	overflow-y: auto;
-
+	transition: all .5s cubic-bezier(0.680, -0.550, 0.265, 1.550);
 	.modal-inner {
-		top: 76px;
-		left: 0;
-		right: 0;
-		margin: 0 auto;
-		transform-origin: center top;
-		transform: translateY(calc(-76px + 2em));
-		margin-bottom: 2em;
+		top: 100%;
+		left: 50%;
+		transform: translate(-50%, 0);
+		margin: 2em 0;
 		width: 850px;
 		border-radius: 10px;
 		overflow: hidden;
@@ -439,7 +420,6 @@ section#results {
 		color: #fff;
 		background-color: map-get($color, bgc-modal);
 		z-index: 2;
-
 		.modal-bg {
 			height: 600px;
 
@@ -456,7 +436,7 @@ section#results {
 			top: 20px;
 			right: 20px;
 			cursor: pointer;
-			color: red;
+			color: #f00;
 
 			span {
 				font-size: 40px;
@@ -513,7 +493,6 @@ section#results {
 	align-items: center;
 	gap: 10px;
 	.imdb-link {
-		//cursor: pointer;
 		outline: none;
 		border-radius: 10px;
 		border: 2px solid transparent;

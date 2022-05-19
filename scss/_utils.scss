@@ -1,12 +1,9 @@
-$color : (bgc-header: #000,
+$color : (
 	link: #fff,
-	link--hover: red,
 	bgc-select:#000,
-	bgc-select--hover: red,
 	option-color: rgb(247, 229, 229),
 	detail-label: #777,
-	bgc-modal: #000,
-	button: red);
+	bgc-modal: #000);
 
 @mixin spinner {
 	&.active {
@@ -32,7 +29,7 @@ $color : (bgc-header: #000,
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;
-		border: 5px solid red;
+		border: 5px solid #f00;
 		border-top-color: transparent;
 		animation: spin 1s linear infinite;
 	}

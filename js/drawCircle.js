@@ -4,7 +4,6 @@ const vauleEl = document.querySelector('.circle-value');
 const RADIUS = barEl.getAttribute('r');
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const drawCircle = score => {
-  console.log(RADIUS);
 	let progress = +score / 10;
   let dashoffset = CIRCUMFERENCE * (1 - progress);
   vauleEl.textContent=score;
