@@ -90,8 +90,10 @@ add commit push 하기
 
 ### ✅ netlify,heoroku 등의 CI/CD에 환경 변수 등록시 webpack 설정
 
-`webpack.config.js`에서 아래 코드를 작성 해줘야 CI/CD에서 환경변수를 인식합니다.
+`webpack.config.js`에서 아래 코드를 작성 해줘야 CI/CD에서 환경변수를 인식합니다. `dotenv-webpack` 플러그인도 설치 해줘야 합니다.
 ```
+const Dotenv = require('dotenv-webpack')
+
 plugins: [
 	new Dotenv({systemvars: true})
 ]
