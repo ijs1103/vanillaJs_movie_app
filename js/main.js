@@ -2,6 +2,7 @@ import '../scss/main.scss';
 import numberAnimation from './numberAnimation';
 import renderOption from './renderOption';
 import drawCircle from './drawCircle';
+import movieTemplate from './movieTemplate';
 import {
 	fetchData,
 	fetchDataById
@@ -33,6 +34,7 @@ const videoCloseEl = get('.video-close');
 const KOREAN = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 const NO_POSTER_IMAGE = "./images/noPoster.png";
 const IMDB_BASE_URL = "https://www.imdb.com/title/";
+const NOT_FOUND = "Movie not found!";
 let gridConEl = resultsSecEl.querySelector('.grid-container');
 let selectedBox, title, type, year, pageLength, currentPage;
 
@@ -68,7 +70,9 @@ const renderMovies = () => {
 	searchInputEl.value = ""; // 검색창 초기화 
 	gridConEl.innerHTML = ""; // 그리드 영역 초기화
 	setTimeout(bodyLoadingStart);
-	fetchData(title, type, year, currentPage).then(res => parseData(res.data)).then(res => bodyLoadingStop()).catch(error => alert(error));
+	fetchData(title, type, year, currentPage)
+		.then(res => parseData(res.data))
+		.then(res => bodyLoadingStop());
 }
 const parseData = resData => {
 	/* 에러처리 */
@@ -84,39 +88,25 @@ const parseData = resData => {
 }
 const renderSearchResults = data => {
 	messageEl.innerHTML = `"${title}" 검색 결과가 <span>${data.totalResults.toLocaleString()}</span>개 있습니다.`
-	const newItems = data.Search.reduce((movies, movie) => movies + MOVIE_TEMPLATE(movie), "");
+	const newItems = data.Search.reduce((movies, movie) => movies + movieTemplate(movie), "");
 	gridConEl.insertAdjacentHTML("beforeend", newItems);
 }
-const MOVIE_TEMPLATE = movie =>
-	`<div class="grid-item">
-		<div class="contents-poster">
-			<img src=${movie.Poster!=='N/A' ? movie.Poster : NO_POSTER_IMAGE} alt="poster" onerror="this.src='./images/noPoster.png'">
-		</div>
-		<div class="hover-contents">
-			<div class="hover-inner">
-				<div class="contents-title">${movie.Title}</div>
-				<div class="contents-more" data-value=${movie.imdbID}>
-					<span class="material-icons">expand_more</span>
-				</div>
-			</div>
-		</div>
-	</div>`;
 
 const handleError = error => {
-	const NOT_FOUND = "Movie not found!";
 	//const MANY_RESULT = "Too many results.";
-	let errorMessage = "";
-	errorMessage = (error === NOT_FOUND) ? `"${title}" 검색 결과가 없습니다.` : "검색 결과가 너무 많습니다.";
+	const errorMessage = (error === NOT_FOUND) ? `"${title}" 검색 결과가 없습니다.` : "검색 결과가 너무 많습니다.";
 	messageEl.textContent = errorMessage;
 }
 
-const io = new IntersectionObserver(async ([{
+const io = new IntersectionObserver(([{
 	isIntersecting
 }]) => {
 	if (!isIntersecting) return;
 	if (pageLength > 1 && pageLength > currentPage) {
 		setTimeout(fetchMoreLoadingStart);
-		fetchData(title, type, year, ++currentPage).then(res => parseData(res.data)).then(res => fetchMoreLoadingStop()).catch(error => alert(error));
+		fetchData(title, type, year, ++currentPage)
+			.then(res => parseData(res.data))
+				.then(res => fetchMoreLoadingStop());
 	}
 });
 
@@ -136,11 +126,13 @@ const handleGridClick = e => {
 }
 
 const renderModal = id => {
-	fetchDataById(id).then(res => parseModalData(res.data)).then(res => {
-		/* 모달창을 제외한 배경 요소 스크롤 방지 */
-		document.body.style.overflow = "hidden";
-		hiddenModalEl.classList.add('active');
-	}).catch(error => alert(error));
+	fetchDataById(id)
+		.then(res => parseModalData(res.data))
+			.then(res => {
+				/* 모달창을 제외한 배경 요소 스크롤 방지 */
+				document.body.style.overflow = "hidden";
+				hiddenModalEl.classList.add('active');
+			});
 }
 
 const parseModalData = async data => {
@@ -186,7 +178,9 @@ const handleSubmit = async (e) => {
 		return;
 	}
 	// 검색어가 없거나, select 박스의 옵션값이 변경되지 않고 검색어가 직전의 검색어와 같을 경우 종료
-	if (searched.replace(/ /gi,"") === "" || title === searched && type === selectBoxEls[0].dataset.option && year === selectBoxEls[1].dataset.option) return;
+	const isInputEmpty = searched.replace(/ /gi,"") === "";
+	const isNotChanged = title === searched && type === selectBoxEls[0].dataset.option && year === selectBoxEls[1].dataset.option;
+	if (isInputEmpty || isNotChanged) return;
 	renderMovies();
 }
 const handleModalClick = () => {
