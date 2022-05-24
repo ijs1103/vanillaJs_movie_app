@@ -1,3 +1,4 @@
+import { NO_POSTER_IMAGE } from './constant';
 const movieTemplate = movie =>
 	`<div class="grid-item">
 		<div class="contents-poster">
